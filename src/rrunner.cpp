@@ -52,12 +52,19 @@ void Grid::togglePen()
         z.moveTo(Z_MOVE_DISTANCE);
         penIsDown = true;
     }
-    z.run()
+    z.run();
 }
 
 //move from current location to given location
 void Grid::move(int xTarget, int yTarget)
 {
+    //error check
+    if (xTarget > NUM_SEGMENTS_X or yTarget > NUM_SEGMENTS_Y)
+    {
+        Serial.print("ERROR OUT OF BOUNDS DISTANCE INPUT");
+        return;
+    }
+
     /*if slope abs value is greater than 1, y will move more than x so for every one segment move of y,
     should have fractional movement of x and vice versa for if slope abs value less than 1*/
 
@@ -123,12 +130,26 @@ double Grid::roundToMinSegment(double in)
 
 void Grid::runYBySegment(double numSegments)
 {
+    //error check
+    if (currentY + numSegments > NUM_SEGMENTS_Y)
+    {
+        Serial.print("ILLEGAL DISTANCE");
+        return;
+    }
+
     y.move(numSegments * STEPS_PER_SEGMENT);
     y.run();
 }
 
 void Grid::runXBySegment(double numSegments)
 {
+    //error check
+    if (currentX + numSegments > NUM_SEGMENTS_X)
+    {
+        Serial.print("ILLEGAL DISTANCE");
+        return;
+    }
+
     x.move(numSegments * STEPS_PER_SEGMENT);
     x.run();
 }

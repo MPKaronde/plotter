@@ -15,6 +15,8 @@ namespace A
         const int Z_MOVE_DISTANCE = 1; //the amount the z motor must move to bring the pen all the way up or down
         const int AXIS_ACCELERATION = 50; //speed at which the axis will accelerate
         const int Z_ACCELERATION = 50; //speed at which z stepper will accelerate
+        const int NUM_SEGMENTS_X = 10; //how far you can go in x axis
+        const int NUM_SEGMENTS_Y = 10; //how far you can go in y axis
 
         public:
             //the motors
@@ -36,7 +38,7 @@ namespace A
 
                 x.setAcceleration(AXIS_ACCELERATION);
                 y.setAcceleration(AXIS_ACCELERATION);
-                z.setAcceleration(Z_ACCELERATION)
+                z.setAcceleration(Z_ACCELERATION);
             }
 
             //Zeros the axis
@@ -54,5 +56,11 @@ namespace A
             //round input value to have number of places of min segment val
             double roundToMinSegment(double in){}
 
-    }
+            //translate segments to steps for y
+            void runYBySegment(double numSegments){}
+
+            //translate segments to steps for x
+            void runXBySegment(double numSegments){}
+
+    };
 }
