@@ -10,9 +10,9 @@ AccelStepper Z(HALFSTEP, 14, 16, 15, 17); //A0 - A3 --> D14 - D17
 
 //axis motor parameters
 const int axisSpeed = 1200;
-const int maxSpeed = 1200; //speed 2
-const int midSpeed = 1000; //speed 1
-const int lowSpeed = 800; //speed 0
+const int maxSpeed = 1200;
+const int midSpeed = 1000;
+const int lowSpeed = 800; 
 const int acceleration = 10000.0;
 
 //z motor parameters
@@ -20,6 +20,7 @@ const int zSpeed = 100;
 const int zMaxSpeed = 100;
 const int zAcceleration = 80;
 const double zLiftDistance = 2038 / 5;
+bool penIsUp; //whether or not pen is lifted
 
 //current coordinates
 double currentX = 0;
@@ -29,6 +30,8 @@ double currentY = 0;
 double stepsPerSegment = 1;
 double segmentsPerCm = 1;
 
+
+//sets all initial motor parameters
 void setup()
 {
     Serial.begin(9600);
@@ -48,111 +51,112 @@ void setup()
     Z.setMaxSpeed(zMaxSpeed);
     Z.setSpeed(zSpeed);
     Z.setAcceleration(zAcceleration);
+
+    penIsUp = true;
 }
 
+
+//pen height code
 //moves pen up when down
 void penUp()
 {
+    if(penUp)
+    {
+        Serial.print("error: pen already up");
+        return;
+    }
     Z.moveTo(2038/3.8);
     while(Z.distanceToGo() != 0)
     {
         Z.run();
     }
+    penIsUp = true;
 }
 //moves pen down when up
 void penDown()
 {
+    if(!penUp)
+    {
+        Serial.print("error: pen already down");
+        return;
+    }
     Z.moveTo(-2038/3.8);
     while(Z.distanceToGo() != 0)
     {
         Z.run();
     }
+    penIsUp = false;
+}
+//move pen up or down depending on current position
+void togglePen()
+{
+    if(penIsUp)
+    {
+        penDown();
+    }
+    if(!penIsUp)
+    {
+        penDown();
+    }
 }
 
+
+//control axis motor speeds
 //set the x speed 
 void setXspeed(int speed)
 {
-    if(speed == 0)
-    {
-        X.setSpeed(800);
-    }
-    else if(speed == 1)
-    {
-        X.setSpeed(1000);
-    }
-    else if(speed == 2)
-    {
-        X.setSpeed(1200);
-    }
-    else
-    {
-        Serial.print("invalid speed");
-        return;
-    }
+    X.setSpeed(speed);
+    X.setMaxSpeed(speed);
 }
 //set the y speed
-void setYspeed(int speed)
+void setYspeed(double speed)
 {
-    if(speed == 0)
-    {
-        Y1.setSpeed(800);
-        Y1.setMaxSpeed(800);
-        Y2.setSpeed(800);
-        Y2.setMaxSpeed(800);
-    }
-    else if(speed == 1)
-    {
-        Y1.setSpeed(1000);
-        Y1.setMaxSpeed(1000);
-        Y2.setSpeed(1000);
-        Y2.setMaxSpeed(1000);
-    }
-    else if(speed == 2)
-    {
-        Y1.setSpeed(1200);
-        Y1.setMaxSpeed(1200);
-        Y2.setSpeed(1200);
-        Y2.setMaxSpeed(1200);
-    }
-    else
-    {
-        Serial.print("invalid speed");
-        return;
-    }
+    Y1.setSpeed(speed);
+    Y1.setMaxSpeed(speed);
+    Y2.setSpeed(speed);
+    Y2.setMaxSpeed(speed);
 }
 
+
+//code to move individual axis's
 //moves the x axis by specified number of motor steps
 void moveXbySteps(double distance, int speed)
 {
-    //setXspeed(speed);
-    X.setSpeed(1000);
+    setXspeed(speed);
+
     X.setCurrentPosition(0);
     X.moveTo(distance);
+
     while(X.distanceToGo() != 0)
     {
         X.run();
     }
+
     currentX += distance;
     return;
-
 }
 //moves the y axis by specified number of motor steps
 void moveYbySteps(double distance, int speed)
 {
     setYspeed(speed);
+
     Y1.setCurrentPosition(0);
     Y2.setCurrentPosition(0);
-    Y1.move(distance);
-    Y2.move(-distance);
+    Y1.moveTo(distance);
+    Y2.moveTo(-distance);
+
     while(Y1.distanceToGo() != 0)
     {
         Y1.run();
         Y2.run();
     }
+
     currentY += distance;
     return;
 }
 
+
+//code to move to specified point
 //calculates the slope of a line
 double slope(double xDistance, double yDistance)
 {
@@ -169,45 +173,22 @@ void runToPoint(double xPoint, double yPoint)
     //s > 1 --> y will run more than x --> reduce x speed
     if(s > 1)
     {
-        Y1.setSpeed(maxSpeed);
-        Y1.setMaxSpeed(maxSpeed);
-
-        Y2.setSpeed(maxSpeed);
-        Y2.setMaxSpeed(maxSpeed);
-
-        X.setSpeed(maxSpeed * (1 / s));
-        X.setMaxSpeed(maxSpeed * (1 / s));
-
-        Serial.println(Y1.speed());
-        Serial.println(Y2.speed());
-        Serial.println(X.speed());
+        setYspeed(maxSpeed);
+        setXspeed(maxSpeed * (1 / s));
     }
 
     //s < 1 --> x will run more than y --> reduce y speed
     else if(s < 1)
     {
-        X.setSpeed(maxSpeed);
-        X.setMaxSpeed(maxSpeed);
-
-        Y1.setSpeed(maxSpeed * s);
-        Y1.setMaxSpeed(maxSpeed * s);
-
-        Y2.setSpeed(maxSpeed * s);
-        Y2.setMaxSpeed(maxSpeed * s);
-
-        Serial.println(Y1.speed());
-        Serial.println(Y2.speed());
-        Serial.println(X.speed());
+        setXspeed(maxSpeed);
+        setYspeed(maxSpeed * s);
     }
 
+    //assume 45 degrees (s = 1)
     else 
     {
-        X.setSpeed(maxSpeed);
-        Y1.setSpeed(maxSpeed);
-        Y2.setSpeed(maxSpeed);
-        Serial.println(Y1.speed());
-        Serial.println(Y2.speed());
-        Serial.println(X.speed());
+        setXspeed(maxSpeed);
+        setYspeed(maxSpeed);
     }
 
     //set location targets
@@ -232,45 +213,19 @@ void runToPoint(double xPoint, double yPoint)
     currentY = yPoint;
 
     //reset motor speeds
-    setXspeed(2);
-    X.setMaxSpeed(maxSpeed);
-    setYspeed(2);
-    Y1.setMaxSpeed(maxSpeed);
-    Y2.setMaxSpeed(maxSpeed);
+    setXspeed(maxSpeed);
+    setYspeed(maxSpeed);
 }
 
-bool complete = false;
 
+//runner loop
+bool complete = false;
 void loop()
 {
-   
+    //put all runner code within if statement
     if(!complete)
-    {
-        //penUp();
-        //penDown();
-        //delay(1000);
-        //runToPoint(-5000, 10000);
-        //moveYbySteps(10000, 0);
-/*
-        Y1.setSpeed(600);
-        Y2.setSpeed(600);
-        X.setSpeed(1000);
-
-        X.setCurrentPosition(0);
-        Y1.setCurrentPosition(0);
-        Y2.setCurrentPosition(0);
-
-        X.moveTo(10000);
-        Y1.moveTo(-5000);
-        Y2.moveTo(5000);
-
-        while(X.distanceToGo() != 0)
-        {
-            X.run();
-            Y1.run();
-            Y2.run();
-        }
-    */
+    {   
+        //Start all runner code here
         Y2.setCurrentPosition(0);
         Y2.setMaxSpeed(1000);
         Y2.moveTo(10000);
@@ -279,13 +234,13 @@ void loop()
             Y2.run();
         }
 
+        //end all runner code before here
         complete = true;
     }
     else
     {
         Serial.print("done");
         Serial.end();
+        return;
     }
-
-    
 }
