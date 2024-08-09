@@ -60,7 +60,7 @@ void setup()
 //moves pen up when down
 void penUp()
 {
-    if(penUp)
+    if(penIsUp)
     {
         Serial.print("error: pen already up");
         return;
@@ -75,7 +75,7 @@ void penUp()
 //moves pen down when up
 void penDown()
 {
-    if(!penUp)
+    if(!penIsUp)
     {
         Serial.print("error: pen already down");
         return;
@@ -142,8 +142,8 @@ void moveYbySteps(double distance, int speed)
 
     Y1.setCurrentPosition(0);
     Y2.setCurrentPosition(0);
-    Y1.moveTo(distance);
-    Y2.moveTo(-distance);
+    Y1.moveTo(-distance);
+    Y2.moveTo(distance);
 
     while(Y1.distanceToGo() != 0)
     {
@@ -197,8 +197,8 @@ void runToPoint(double xPoint, double yPoint)
     Y2.setCurrentPosition(0);
 
     X.moveTo((xPoint - currentX) * stepsPerSegment);
-    Y1.moveTo((yPoint - currentY) *  stepsPerSegment);
-    Y2.moveTo((yPoint - currentY) * -stepsPerSegment);
+    Y1.moveTo((yPoint - currentY) *  -stepsPerSegment);
+    Y2.moveTo((yPoint - currentY) * stepsPerSegment);
 
     //run until can run no more
     while(X.distanceToGo() != 0 or Y1.distanceToGo() != 0 or Y2.distanceToGo() != 0)
@@ -226,13 +226,7 @@ void loop()
     if(!complete)
     {   
         //Start all runner code here
-        Y2.setCurrentPosition(0);
-        Y2.setMaxSpeed(1000);
-        Y2.moveTo(10000);
-        while(1 == 1)
-        {
-            Y2.run();
-        }
+        runToPoint(10000, 10000);
 
         //end all runner code before here
         complete = true;
