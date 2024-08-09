@@ -16,11 +16,12 @@ const int lowSpeed = 800;
 const int acceleration = 10000.0;
 
 //z motor parameters
-const int zSpeed = 100;
-const int zMaxSpeed = 100;
+const int zSpeed = 80;
+const int zMaxSpeed = 80;
 const int zAcceleration = 80;
-const double zLiftDistance = 2038 / 5;
+const double zLiftDistance = 2038 / 4;
 bool penIsUp; //whether or not pen is lifted
+bool penIsHalfUp; //whether the pen has been half lifted
 
 //current coordinates
 double currentX = 0;
@@ -53,6 +54,7 @@ void setup()
     Z.setAcceleration(zAcceleration);
 
     penIsUp = true;
+    penIsHalfUp = false;
 }
 
 
@@ -60,12 +62,24 @@ void setup()
 //moves pen up when down
 void penUp()
 {
+    Z.setCurrentPosition(0);
     if(penIsUp)
     {
         Serial.print("error: pen already up");
         return;
     }
-    Z.moveTo(2038/3.8);
+    if(penIsHalfUp)
+    {
+        Z.moveTo(zLiftDistance * 3 / 4);
+        while(Z.distanceToGo() != 0)
+        {
+            Z.run();
+        }
+        penIsHalfUp = false;
+        penIsUp = true;
+        return;
+    }
+    Z.moveTo(zLiftDistance);
     while(Z.distanceToGo() != 0)
     {
         Z.run();
@@ -75,18 +89,50 @@ void penUp()
 //moves pen down when up
 void penDown()
 {
-    if(!penIsUp)
+    Z.setCurrentPosition(0);
+    /*if(!penIsUp or !penIsHalfUp)
     {
         Serial.print("error: pen already down");
         return;
+    }*/
+    //if pen is half up
+    if(penIsHalfUp)
+    {
+        Z.moveTo(-zLiftDistance / 4);
+        while(Z.distanceToGo() != 0)
+        {
+            Z.run();
+        }
+        penIsHalfUp = false;
+        return;
     }
-    Z.moveTo(-2038/3.8);
+    //else pen must be all the way up
+    Z.moveTo(-zLiftDistance);
     while(Z.distanceToGo() != 0)
     {
         Z.run();
     }
     penIsUp = false;
 }
+//move the pen up just enough to move
+void penHalfLift()
+{
+    /*
+    if(penIsUp or penIsHalfUp)
+    {
+        Serial.print("error: pen cannot be half raised");
+        return;
+    }*/
+    Z.setCurrentPosition(0);
+    Z.moveTo(zLiftDistance / 4);
+    while(Z.distanceToGo() != 0)
+    {
+        Z.run();
+    }
+    penIsHalfUp = true;
+}
+
+
 //move pen up or down depending on current position
 void togglePen()
 {
@@ -166,6 +212,8 @@ double slope(double xDistance, double yDistance)
 }
 //run to a point in a straight line
 void runToPoint(double xPoint, double yPoint)
+
+
 {
     double s = slope(xPoint, yPoint);
 
@@ -217,6 +265,92 @@ void runToPoint(double xPoint, double yPoint)
     setYspeed(maxSpeed);
 }
 
+//standard patterns to test with
+void makeSquare(double size, double speed)
+{
+    penDown();
+    moveXbySteps(size, speed);
+    moveYbySteps(size, speed);
+    moveXbySteps(-size, speed);
+    moveYbySteps(-size, speed);
+    penUp();
+}
+
+void writeHello()
+{
+    //H
+    penDown();
+    moveYbySteps(5000, maxSpeed);
+    moveYbySteps(-2500, maxSpeed);
+    moveXbySteps(2500, maxSpeed);
+    moveYbySteps(-2500, maxSpeed);
+    moveYbySteps(5000, maxSpeed);
+    penHalfLift();
+
+    //reposition
+    moveXbySteps(1000, maxSpeed);
+
+    //E
+    penDown();
+    moveYbySteps(-5000, maxSpeed);
+    moveXbySteps(2500, maxSpeed);
+    moveXbySteps(-2500, maxSpeed);
+    moveYbySteps(2500, maxSpeed);
+    moveXbySteps(2500, maxSpeed);
+    moveXbySteps(-2500, maxSpeed);
+    moveYbySteps(2500, maxSpeed);
+    moveXbySteps(2500, maxSpeed);
+    penHalfLift();
+
+    //reposition
+    moveXbySteps(1000, maxSpeed);
+
+    //L
+    penDown();
+    moveYbySteps(-5000, maxSpeed);
+    moveXbySteps(2500, maxSpeed);
+    penHalfLift();
+
+    //reposition
+    moveXbySteps(1000, maxSpeed);
+    moveYbySteps(5000, maxSpeed);
+
+    //L
+    penDown();
+    moveYbySteps(-5000, maxSpeed);
+    moveXbySteps(2500, maxSpeed);
+    penHalfLift();
+
+    //reposition
+    moveXbySteps(1000, maxSpeed);
+    moveYbySteps(5000, maxSpeed);
+
+    //O
+    penDown();
+    moveXbySteps(2500, maxSpeed);
+    moveYbySteps(-5000, maxSpeed);
+    moveXbySteps(-2500, maxSpeed);
+    moveYbySteps(5000, maxSpeed);
+    penUp();
+}
+
+//gets keyboard input to start loaded code
+void onStart()
+{
+    bool start = false;
+    while(!start)
+    {
+        Serial.print("Do you wish to begin the program? y/n: ");
+        String input = Serial.readString();
+        if(input == "y")
+        {
+            start = true;
+        }
+        Serial.println();
+        delay(100);
+    }
+
+}
 
 //runner loop
 bool complete = false;
@@ -225,8 +359,10 @@ void loop()
     //put all runner code within if statement
     if(!complete)
     {   
+        onStart();
+
         //Start all runner code here
-        runToPoint(10000, 10000);
+        writeHello();
 
         //end all runner code before here
         complete = true;
