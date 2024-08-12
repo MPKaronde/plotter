@@ -2,37 +2,38 @@
 #include <math.h>
 #define HALFSTEP 4
 
-//motors
+// motors
 AccelStepper X(HALFSTEP, 10, 11, 12, 13);
 AccelStepper Y2(HALFSTEP, 6, 7, 8, 9);
 AccelStepper Y1(HALFSTEP, 2, 3, 4, 5);
-AccelStepper Z(HALFSTEP, 14, 16, 15, 17); //A0 - A3 --> D14 - D17
+AccelStepper Z(HALFSTEP, 14, 16, 15, 17); // A0 - A3 --> D14 - D17
 
-//axis motor parameters
+// axis motor parameters
 const int axisSpeed = 1200;
-const int maxSpeed = 1200;
-const int midSpeed = 1000;
-const int lowSpeed = 800; 
+const int maxSpeed = 1200; // 2.0 encoded
+const int midSpeed = 1000; // 1.0 encoded
+const int lowSpeed = 800;  // 0.0 encoded
 const int acceleration = 10000.0;
 
-//z motor parameters
+const double minAcceptableSpeed = 400.0; // minimum safe speed
+
+// z motor parameters
 const int zSpeed = 80;
 const int zMaxSpeed = 80;
 const int zAcceleration = 80;
 const double zLiftDistance = 2038 / 4;
-bool penIsUp; //whether or not pen is lifted
-bool penIsHalfUp; //whether the pen has been half lifted
+bool penIsUp;     // whether or not pen is lifted
+bool penIsHalfUp; // whether the pen has been half lifted
 
-//current coordinates
+// current coordinates
 double currentX = 0;
 double currentY = 0;
 
-//translation parameters
+// translation parameters
 double stepsPerSegment = 1;
 double segmentsPerCm = 1;
 
-
-//sets all initial motor parameters
+// sets all initial motor parameters
 void setup()
 {
     Serial.begin(9600);
@@ -57,21 +58,22 @@ void setup()
     penIsHalfUp = false;
 }
 
-
-//pen height code
-//moves pen up when down
+// pen height code
+// moves pen up when down
+//
+//
 void penUp()
 {
     Z.setCurrentPosition(0);
-    if(penIsUp)
+    if (penIsUp)
     {
         Serial.print("error: pen already up");
         return;
     }
-    if(penIsHalfUp)
+    if (penIsHalfUp)
     {
         Z.moveTo(zLiftDistance * 3 / 4);
-        while(Z.distanceToGo() != 0)
+        while (Z.distanceToGo() != 0)
         {
             Z.run();
         }
@@ -80,13 +82,13 @@ void penUp()
         return;
     }
     Z.moveTo(zLiftDistance);
-    while(Z.distanceToGo() != 0)
+    while (Z.distanceToGo() != 0)
     {
         Z.run();
     }
     penIsUp = true;
 }
-//moves pen down when up
+// moves pen down when up
 void penDown()
 {
     Z.setCurrentPosition(0);
@@ -95,26 +97,26 @@ void penDown()
         Serial.print("error: pen already down");
         return;
     }*/
-    //if pen is half up
-    if(penIsHalfUp)
+    // if pen is half up
+    if (penIsHalfUp)
     {
         Z.moveTo(-zLiftDistance / 4);
-        while(Z.distanceToGo() != 0)
+        while (Z.distanceToGo() != 0)
         {
             Z.run();
         }
         penIsHalfUp = false;
         return;
     }
-    //else pen must be all the way up
+    // else pen must be all the way up
     Z.moveTo(-zLiftDistance);
-    while(Z.distanceToGo() != 0)
+    while (Z.distanceToGo() != 0)
     {
         Z.run();
     }
     penIsUp = false;
 }
-//move the pen up just enough to move
+// move the pen up just enough to move
 void penHalfLift()
 {
     /*
@@ -125,36 +127,35 @@ void penHalfLift()
     }*/
     Z.setCurrentPosition(0);
     Z.moveTo(zLiftDistance / 4);
-    while(Z.distanceToGo() != 0)
+    while (Z.distanceToGo() != 0)
     {
         Z.run();
     }
     penIsHalfUp = true;
 }
-
-
-//move pen up or down depending on current position
+// move pen up or down depending on current position
 void togglePen()
 {
-    if(penIsUp)
+    if (penIsUp)
     {
         penDown();
     }
-    if(!penIsUp)
+    if (!penIsUp)
     {
         penDown();
     }
 }
 
-
-//control axis motor speeds
-//set the x speed 
+// control axis motor speeds
+// set the x speed
+//
+//
 void setXspeed(int speed)
 {
     X.setSpeed(speed);
     X.setMaxSpeed(speed);
 }
-//set the y speed
+// set the y speed
 void setYspeed(double speed)
 {
     Y1.setSpeed(speed);
@@ -163,9 +164,10 @@ void setYspeed(double speed)
     Y2.setMaxSpeed(speed);
 }
 
-
-//code to move individual axis's
-//moves the x axis by specified number of motor steps
+// code to move individual axis's
+// moves the x axis by specified number of motor steps
+//
+//
 void moveXbySteps(double distance, int speed)
 {
     setXspeed(speed);
@@ -173,7 +175,7 @@ void moveXbySteps(double distance, int speed)
     X.setCurrentPosition(0);
     X.moveTo(distance);
 
-    while(X.distanceToGo() != 0)
+    while (X.distanceToGo() != 0)
     {
         X.run();
     }
@@ -181,7 +183,7 @@ void moveXbySteps(double distance, int speed)
     currentX += distance;
     return;
 }
-//moves the y axis by specified number of motor steps
+// moves the y axis by specified number of motor steps
 void moveYbySteps(double distance, int speed)
 {
     setYspeed(speed);
@@ -191,7 +193,7 @@ void moveYbySteps(double distance, int speed)
     Y1.moveTo(-distance);
     Y2.moveTo(distance);
 
-    while(Y1.distanceToGo() != 0)
+    while (Y1.distanceToGo() != 0)
     {
         Y1.run();
         Y2.run();
@@ -201,71 +203,73 @@ void moveYbySteps(double distance, int speed)
     return;
 }
 
-
-//code to move to specified point
-//calculates the slope of a line
+// code to move to specified point
+// calculates the slope of a line
+//
+//
 double slope(double xDistance, double yDistance)
 {
     double top = currentY - yDistance;
     double bot = currentX - xDistance;
     return abs(top / bot);
 }
-//run to a point in a straight line
+// run to a point in a straight line
 void runToPoint(double xPoint, double yPoint)
-
 
 {
     double s = slope(xPoint, yPoint);
 
     Serial.print(s);
-    //s > 1 --> y will run more than x --> reduce x speed
-    if(s > 1)
+    // s > 1 --> y will run more than x --> reduce x speed
+    if (s > 1)
     {
         setYspeed(maxSpeed);
         setXspeed(maxSpeed * (1 / s));
     }
 
-    //s < 1 --> x will run more than y --> reduce y speed
-    else if(s < 1)
+    // s < 1 --> x will run more than y --> reduce y speed
+    else if (s < 1)
     {
         setXspeed(maxSpeed);
         setYspeed(maxSpeed * s);
     }
 
-    //assume 45 degrees (s = 1)
-    else 
+    // assume 45 degrees (s = 1)
+    else
     {
         setXspeed(maxSpeed);
         setYspeed(maxSpeed);
     }
 
-    //set location targets
+    // set location targets
     X.setCurrentPosition(0);
     Y1.setCurrentPosition(0);
     Y2.setCurrentPosition(0);
 
     X.moveTo((xPoint - currentX) * stepsPerSegment);
-    Y1.moveTo((yPoint - currentY) *  -stepsPerSegment);
+    Y1.moveTo((yPoint - currentY) * -stepsPerSegment);
     Y2.moveTo((yPoint - currentY) * stepsPerSegment);
 
-    //run until can run no more
-    while(X.distanceToGo() != 0 or Y1.distanceToGo() != 0 or Y2.distanceToGo() != 0)
+    // run until can run no more
+    while (X.distanceToGo() != 0 or Y1.distanceToGo() != 0 or Y2.distanceToGo() != 0)
     {
         X.run();
         Y1.run();
         Y2.run();
     }
 
-    //set that have reached location
+    // set that have reached location
     currentX = xPoint;
     currentY = yPoint;
 
-    //reset motor speeds
+    // reset motor speeds
     setXspeed(maxSpeed);
     setYspeed(maxSpeed);
 }
 
-//standard patterns to test with
+// standard patterns to test with
+//
+//
 void makeSquare(double size, double speed)
 {
     penDown();
@@ -275,10 +279,9 @@ void makeSquare(double size, double speed)
     moveYbySteps(-size, speed);
     penUp();
 }
-
 void writeHello()
 {
-    //H
+    // H
     penDown();
     moveYbySteps(5000, maxSpeed);
     moveYbySteps(-2500, maxSpeed);
@@ -287,10 +290,10 @@ void writeHello()
     moveYbySteps(5000, maxSpeed);
     penHalfLift();
 
-    //reposition
+    // reposition
     moveXbySteps(1000, maxSpeed);
 
-    //E
+    // E
     penDown();
     moveYbySteps(-5000, maxSpeed);
     moveXbySteps(2500, maxSpeed);
@@ -302,30 +305,30 @@ void writeHello()
     moveXbySteps(2500, maxSpeed);
     penHalfLift();
 
-    //reposition
+    // reposition
     moveXbySteps(1000, maxSpeed);
 
-    //L
+    // L
     penDown();
     moveYbySteps(-5000, maxSpeed);
     moveXbySteps(2500, maxSpeed);
     penHalfLift();
 
-    //reposition
+    // reposition
     moveXbySteps(1000, maxSpeed);
     moveYbySteps(5000, maxSpeed);
 
-    //L
+    // L
     penDown();
     moveYbySteps(-5000, maxSpeed);
     moveXbySteps(2500, maxSpeed);
     penHalfLift();
 
-    //reposition
+    // reposition
     moveXbySteps(1000, maxSpeed);
     moveYbySteps(5000, maxSpeed);
 
-    //O
+    // O
     penDown();
     moveXbySteps(2500, maxSpeed);
     moveYbySteps(-5000, maxSpeed);
@@ -334,37 +337,178 @@ void writeHello()
     penUp();
 }
 
-//gets keyboard input to start loaded code
+// gets keyboard input to start loaded code
+//
+//
 void onStart()
+
 {
     bool start = false;
-    while(!start)
+    while (!start)
     {
         Serial.print("Do you wish to begin the program? y/n: ");
         String input = Serial.readString();
-        if(input == "y")
+        if (input == "y")
         {
             start = true;
         }
         Serial.println();
         delay(100);
     }
-
 }
 
-//runner loop
+// correct to the right speed
+double setAcceptableSpeed(double speed)
+{
+    // if its lower than min acceptable speed, its either a preset or make it min acceptable speed
+    if (speed < minAcceptableSpeed)
+    {
+        if (speed == 0.0)
+        {
+            speed = lowSpeed;
+        }
+        else if (speed == 1.0)
+        {
+            speed = midSpeed;
+        }
+        else if (speed == 2.0)
+        {
+            speed = maxSpeed;
+        }
+        else
+        {
+            speed = minAcceptableSpeed;
+        }
+    }
+    // if speed is above safe max speed
+    else if (speed > maxSpeed)
+    {
+        speed = maxSpeed;
+    }
+    return speed;
+}
+
+// code to process commands from computer read code
+void processCommand(String command)
+{
+    int space1 = command.indexOf(" ");
+    String main = command.substring(0, space1);
+
+    // moveByX
+    if (main == "x")
+    {
+        int space2 = command.indexOf(" ", space1);
+        double distance = command.substring(space1, space2).toDouble();
+
+        int space3 = command.indexOf(" ", space2);
+        double speed = command.substring(space3).toDouble();
+
+        speed = setAcceptableSpeed(speed);
+
+        moveXbySteps(distance, speed);
+    }
+
+    // moveByY
+    if (main == "y")
+    {
+        int space2 = command.indexOf(" ", space1);
+        double distance = command.substring(space1, space2).toDouble();
+
+        int space3 = command.indexOf(" ", space2);
+        double speed = command.substring(space3).toDouble();
+
+        speed = setAcceptableSpeed(speed);
+
+        moveYbySteps(distance, speed);
+    }
+
+    // toggle pen
+    if (main == "tp")
+    {
+        togglePen();
+    }
+
+    // pen up
+    if (main == "pu")
+    {
+        penUp();
+    }
+
+    // pen down
+    if (main == "pd")
+    {
+        penDown();
+    }
+
+    // pen half up
+    if (main == "hu")
+    {
+        penHalfLift();
+    }
+
+    // run to point
+    if (main == "rtp")
+    {
+        int space2 = command.indexOf(" ", space1);
+        int space3 = command.indexOf(" ", space2);
+
+        double x = command.substring(space2, space3).toDouble();
+        double y = command.substring(space3).toDouble();
+
+        runToPoint(x, y);
+    }
+
+    // set x speed
+    if (main == "xs")
+    {
+        int space2 = command.indexOf(" ", space1);
+        double speed = command.substring(space2).toDouble();
+
+        setXspeed(speed);
+    }
+
+    // set y speed
+    if (main == "ys")
+    {
+        int space2 = command.indexOf(" ", space1);
+        double speed = command.substring(space2).toDouble();
+
+        setYspeed(speed);
+    }
+
+    // draw square
+    if (main == "square")
+    {
+        int space2 = command.indexOf(" ", space1);
+        int space3 = command.indexOf(" ", space2);
+        double distance = command.substring(space2, space3).toDouble();
+        double speed = command.substring(space3).toDouble();
+
+        makeSquare(distance, speed);
+    }
+
+    // draw hello
+    if (main == "hello")
+    {
+        writeHello();
+    }
+}
+
+// runner loop
+//
+//
 bool complete = false;
 void loop()
 {
-    //put all runner code within if statement
-    if(!complete)
-    {   
+    // put all runner code within if statement
+    if (!complete)
+    {
         onStart();
 
-        //Start all runner code here
+        // Start all runner code here
         writeHello();
 
-        //end all runner code before here
+        // end all runner code before here
         complete = true;
     }
     else
