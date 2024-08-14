@@ -346,7 +346,7 @@ void onStart()
     bool start = false;
     while (!start)
     {
-        Serial.print("Do you wish to begin the program? y/n: ");
+        Serial.print("Do you wish to begin the program? y/n:\n");
         String input = Serial.readString();
         if (input == "y")
         {
@@ -389,19 +389,35 @@ double setAcceptableSpeed(double speed)
 }
 
 // code to process commands from computer read code
-void processCommand(String command)
+bool processCommand(String command)
 {
     int space1 = command.indexOf(" ");
-    String main = command.substring(0, space1);
+    String main;
+
+    if (space1 == -1)
+    {
+        int len = command.length();
+        // not having a space makes /n become part of the command, so must remove
+        main = command.substring(0, len - 1);
+    }
+    else
+    {
+        main = command.substring(0, space1);
+    }
+
+    // if progam is to end
+    if (main == "end")
+    {
+        return true;
+    }
 
     // moveByX
     if (main == "x")
     {
-        int space2 = command.indexOf(" ", space1);
-        double distance = command.substring(space1, space2).toDouble();
-
-        int space3 = command.indexOf(" ", space2);
-        double speed = command.substring(space3).toDouble();
+        int space2 = command.indexOf(" ", space1 + 1);
+        String dist = command.substring(space1, space2);
+        double distance = dist.toDouble();
+        double speed = command.substring(space2).toDouble();
 
         speed = setAcceptableSpeed(speed);
 
@@ -411,11 +427,10 @@ void processCommand(String command)
     // moveByY
     if (main == "y")
     {
-        int space2 = command.indexOf(" ", space1);
-        double distance = command.substring(space1, space2).toDouble();
-
-        int space3 = command.indexOf(" ", space2);
-        double speed = command.substring(space3).toDouble();
+        int space2 = command.indexOf(" ", space1 + 1);
+        String dist = command.substring(space1, space2);
+        double distance = dist.toDouble();
+        double speed = command.substring(space2).toDouble();
 
         speed = setAcceptableSpeed(speed);
 
@@ -449,11 +464,10 @@ void processCommand(String command)
     // run to point
     if (main == "rtp")
     {
-        int space2 = command.indexOf(" ", space1);
-        int space3 = command.indexOf(" ", space2);
+        int space2 = command.indexOf(" ", space1 + 1);
 
-        double x = command.substring(space2, space3).toDouble();
-        double y = command.substring(space3).toDouble();
+        double x = command.substring(space1, space2).toDouble();
+        double y = command.substring(space2).toDouble();
 
         runToPoint(x, y);
     }
@@ -461,8 +475,7 @@ void processCommand(String command)
     // set x speed
     if (main == "xs")
     {
-        int space2 = command.indexOf(" ", space1);
-        double speed = command.substring(space2).toDouble();
+        double speed = command.substring(space1).toDouble();
 
         setXspeed(speed);
     }
@@ -470,8 +483,7 @@ void processCommand(String command)
     // set y speed
     if (main == "ys")
     {
-        int space2 = command.indexOf(" ", space1);
-        double speed = command.substring(space2).toDouble();
+        double speed = command.substring(space1).toDouble();
 
         setYspeed(speed);
     }
@@ -479,10 +491,9 @@ void processCommand(String command)
     // draw square
     if (main == "square")
     {
-        int space2 = command.indexOf(" ", space1);
-        int space3 = command.indexOf(" ", space2);
-        double distance = command.substring(space2, space3).toDouble();
-        double speed = command.substring(space3).toDouble();
+        int space2 = command.indexOf(" ", space1 + 1);
+        double distance = command.substring(space1, space2).toDouble();
+        double speed = command.substring(space2).toDouble();
 
         makeSquare(distance, speed);
     }
@@ -492,21 +503,50 @@ void processCommand(String command)
     {
         writeHello();
     }
+
+    // allows next command
+    return false;
 }
 
+// handles all serial communication
+void runProgam()
+{
+    bool end = false;
+
+    int i = 1;
+
+    while (end == false)
+    {
+        // send confirmation that ready for next command
+        Serial.println("go " + String(i));
+        String command = Serial.readString();
+        end = processCommand(command);
+        i += 1;
+    }
+}
 // runner loop
 //
 //
 bool complete = false;
+
 void loop()
 {
+    /*
+    Serial.print("\n");
+    while (1 == 1)
+    {
+        Serial.print("hello\n");
+    }
+    */
     // put all runner code within if statement
     if (!complete)
     {
+        // Serial.print("hello");
+
         onStart();
 
         // Start all runner code here
-        writeHello();
+        runProgam();
 
         // end all runner code before here
         complete = true;
