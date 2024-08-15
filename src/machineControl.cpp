@@ -21,7 +21,7 @@ const double minAcceptableSpeed = 400.0; // minimum safe speed
 const int zSpeed = 80;
 const int zMaxSpeed = 80;
 const int zAcceleration = 80;
-const double zLiftDistance = 2038 / 4;
+const double zLiftDistance = 2038 / 3.7;
 bool penIsUp;     // whether or not pen is lifted
 bool penIsHalfUp; // whether the pen has been half lifted
 
@@ -30,7 +30,7 @@ double currentX = 0;
 double currentY = 0;
 
 // translation parameters
-double stepsPerSegment = 1;
+double stepsPerSegment = 4050;
 double segmentsPerCm = 1;
 
 // sets all initial motor parameters
@@ -56,6 +56,17 @@ void setup()
 
     penIsUp = true;
     penIsHalfUp = false;
+}
+
+// sets all machine axis = 0
+//
+//
+void zeroMachine()
+{
+    currentX = 0;
+    currentY = 0;
+    Serial.println("CurrentX: " + String(currentX));
+    Serial.println("CurrentY: " + String(currentY));
 }
 
 // pen height code
@@ -180,7 +191,7 @@ void moveXbySteps(double distance, int speed)
         X.run();
     }
 
-    currentX += distance;
+    currentX += distance / stepsPerSegment;
     return;
 }
 // moves the y axis by specified number of motor steps
@@ -199,8 +210,20 @@ void moveYbySteps(double distance, int speed)
         Y2.run();
     }
 
-    currentY += distance;
+    currentY += distance / stepsPerSegment;
     return;
+}
+
+// move individual axis's by segments
+//
+//
+void moveXBySegments(double distance, int speed)
+{
+    moveXbySteps(distance * stepsPerSegment, speed);
+}
+void moveYBySegments(double distance, int speed)
+{
+    moveYbySteps(distance * stepsPerSegment, speed);
 }
 
 // code to move to specified point
@@ -209,17 +232,37 @@ void moveYbySteps(double distance, int speed)
 //
 double slope(double xDistance, double yDistance)
 {
-    double top = currentY - yDistance;
-    double bot = currentX - xDistance;
+    double top = currentY - abs(yDistance);
+    Serial.println(String(currentY) + " - " + String(yDistance) + " = " + String(top));
+    double bot = currentX - abs(xDistance);
+    Serial.println(String(currentX) + " - " + String(xDistance) + " = " + String(bot));
+    // avoid divide by 0
+    if (bot == 0)
+    {
+        return -1;
+    }
     return abs(top / bot);
 }
-// run to a point in a straight line
-void runToPoint(double xPoint, double yPoint)
 
+//  run to a point in a straight line in terms of segments
+void runToPoint(double xPoint, double yPoint)
 {
     double s = slope(xPoint, yPoint);
+    Serial.println(s);
 
-    Serial.print(s);
+    // vertical line
+    if (s == -1)
+    {
+        moveYBySegments(yPoint - currentY, maxSpeed);
+        return;
+    }
+
+    // horizontal line
+    if (s == 0)
+    {
+        moveXBySegments(xPoint - currentX, maxSpeed);
+    }
+
     // s > 1 --> y will run more than x --> reduce x speed
     if (s > 1)
     {
@@ -249,6 +292,9 @@ void runToPoint(double xPoint, double yPoint)
     X.moveTo((xPoint - currentX) * stepsPerSegment);
     Y1.moveTo((yPoint - currentY) * -stepsPerSegment);
     Y2.moveTo((yPoint - currentY) * stepsPerSegment);
+
+    Serial.println("X Move: " + String(xPoint) + " - " + String(currentX) + " = " + String(xPoint - currentX));
+    Serial.println("Y Move: " + String(yPoint) + " - " + String(currentY) + " = " + String(yPoint - currentY));
 
     // run until can run no more
     while (X.distanceToGo() != 0 or Y1.distanceToGo() != 0 or Y2.distanceToGo() != 0)
@@ -424,6 +470,33 @@ bool processCommand(String command)
         moveXbySteps(distance, speed);
     }
 
+    // moveByX in terms of segments
+    if (main == "xbs")
+    {
+        int space2 = command.indexOf(" ", space1 + 1);
+        String dist = command.substring(space1, space2);
+        double distance = dist.toDouble();
+        double speed = command.substring(space2).toDouble();
+
+        speed = setAcceptableSpeed(speed);
+
+        moveXBySegments(distance, speed);
+        Serial.println("understood");
+    }
+
+    // move by y in terms of segments
+    if (main == "ybs")
+    {
+        int space2 = command.indexOf(" ", space1 + 1);
+        String dist = command.substring(space1, space2);
+        double distance = dist.toDouble();
+        double speed = command.substring(space2).toDouble();
+
+        speed = setAcceptableSpeed(speed);
+
+        moveYBySegments(distance, speed);
+    }
+
     // moveByY
     if (main == "y")
     {
@@ -502,6 +575,12 @@ bool processCommand(String command)
     if (main == "hello")
     {
         writeHello();
+    }
+
+    // zero machine
+    if (main == "z")
+    {
+        zeroMachine();
     }
 
     // allows next command
