@@ -40,24 +40,23 @@ def waitForGo():
         x = readSerial()
         if("go" in x):
             return
-    
-"""
-    while(go == False):
-        time.sleep(waitTime)
-        serialRead.readline()
-        if(readSerial().__eq__("go") == 0):
-            go = True
-            print("weeeeee!")
-"""
             
 #run incoming commands
 def run():
     line = code.readline()
     while(line != ""):
         waitForGo()
-        writeToSerial(line)
+        
+        #check if its a comment and print it if so
+        if(line[:1] == "#"):
+            print("Comment: " + line)   
+        else:
+            writeToSerial(line)
+        
+        #read next line
         line = code.readline()
 
+#reads everything coming in through serial port without sending anything
 def printStream(times):
     a = 0
     while(a < times):
@@ -65,18 +64,6 @@ def printStream(times):
         time.sleep(waitTime)
         a+=1 
 
+#runner code
 startLoop()
 run()
-
-
-"""
-a = 0   
-while(a < 5):
-    time.sleep(1)
-    x = serialRead.readline().decode('latin-1')
-    if(len(x) < 13):
-        print(x)
-    if(x.__eq__("hello") == 0):
-       print("hi")
-    a+=1 
-"""
