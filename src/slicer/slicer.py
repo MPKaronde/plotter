@@ -2,10 +2,7 @@ import cv2
 import numpy as np
 from PIL import Image
 
-#how many segments to skip
-resolution = 20
-
-def process_image(image_path, grid_size=10):
+def process_image(image_path, resolution, grid_size=10):
     # Load image
     img = Image.open(image_path).convert('L')  # Convert to grayscale
     img_array = np.array(img)
@@ -46,29 +43,15 @@ def process_image(image_path, grid_size=10):
     # Ensure the shape is closed by repeating the first point at the end
     if coordinates:
         coordinates.append(coordinates[0])
-
+    
     # Format coordinates as a string
+    # currently only puts pen down at beggining and lifts it at end
     def format_coordinates(coords):
-        out = ""
+        out = "pd\n"
         for a in range(len(coords)):
             if a % resolution == 0:
                 out += "rtp " + str(coords[a][0]) + " " + str(coords[a][1]) +  "\n"
-        out += "end"
+        out += "pu\nend"
         return out
     
     return format_coordinates(coordinates)
-
-def main():
-    image_path = 'C:\\Users\\manav\\Documents\\PlatformIO\\Projects\\Plotter\\src\\slicer\\vectors\\test3.png'  # Replace with your image file path
-    formatted_coordinates = process_image(image_path)
-    
-    print("2D coordinates on the grid:")
-    print(formatted_coordinates)
-    writePath = r"C:\\Users\\manav\\Documents\\PlatformIO\\Projects\\Plotter\\src\\gCodeIO\\file.txt"
-    code = open(writePath, "+w")
-    code.write(formatted_coordinates)
-    code.close()
-    #formatToRun(formatted_coordinates)
-    
-if __name__ == "__main__":
-    main()
