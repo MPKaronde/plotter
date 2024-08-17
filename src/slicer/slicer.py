@@ -2,6 +2,9 @@ import cv2
 import numpy as np
 from PIL import Image
 
+#how many segments to skip
+resolution = 20
+
 def process_image(image_path, grid_size=10):
     # Load image
     img = Image.open(image_path).convert('L')  # Convert to grayscale
@@ -46,21 +49,14 @@ def process_image(image_path, grid_size=10):
 
     # Format coordinates as a string
     def format_coordinates(coords):
-        return '\n'.join(f"{x:.3f} {y:.3f}" for x, y in coords)
-
+        out = ""
+        for a in range(len(coords)):
+            if a % resolution == 0:
+                out += "rtp " + str(coords[a][0]) + " " + str(coords[a][1]) +  "\n"
+        out += "end"
+        return out
+    
     return format_coordinates(coordinates)
-
-#format to lines that can be run
-def formatToRun(coords):
-    writePath = r"C:\\Users\\manav\\Documents\\PlatformIO\\Projects\\Plotter\\src\\gCodeIO\\file.txt"
-    code = open(writePath, "+w")
-    cordList = coords.split("\n")
-    for a in cordList:
-        out = "rtp "
-        out += a[:1] + " "
-        out += a[2:] + "\n"
-        code.write(out)
-    code.write("end")
 
 def main():
     image_path = 'C:\\Users\\manav\\Documents\\PlatformIO\\Projects\\Plotter\\src\\slicer\\vectors\\test3.png'  # Replace with your image file path
@@ -68,7 +64,11 @@ def main():
     
     print("2D coordinates on the grid:")
     print(formatted_coordinates)
-    formatToRun(formatted_coordinates)
+    writePath = r"C:\\Users\\manav\\Documents\\PlatformIO\\Projects\\Plotter\\src\\gCodeIO\\file.txt"
+    code = open(writePath, "+w")
+    code.write(formatted_coordinates)
+    code.close()
+    #formatToRun(formatted_coordinates)
     
 if __name__ == "__main__":
     main()
