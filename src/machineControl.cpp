@@ -1,3 +1,6 @@
+// everything that is run on board the machine
+// includes movement code and interpretation code
+
 #include <AccelStepper.h>
 #include <math.h>
 #define HALFSTEP 4
