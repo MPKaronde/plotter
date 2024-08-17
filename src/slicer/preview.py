@@ -5,12 +5,13 @@ filePath = r"C:\\Users\\manav\\Documents\\PlatformIO\\Projects\\Plotter\\src\\gC
 
 #read from file and format to np.array
 def readFromFile(path):
+    penDown = False
     ret = []
     code = open(path, '+r')
     line = code.readline()
     while(line != "end"):
-        #check if line is an rtp line
-        if line.find("rtp") != -1:
+        #check if line is an rtp line and pen is down
+        if line.find("rtp") != -1 and penDown:
             space1 = line.find(" ")
             space2 = line.find(" ", space1 + 1)
             x = line[space1:space2].strip()
@@ -18,6 +19,11 @@ def readFromFile(path):
             x = float(x)
             y = float(y)
             ret.append([x, y])
+        #penUp/Down
+        if line.find("pu") != -1:
+            penDown = False
+        if line.find("pd") != -1:
+            penDown = True
         line = code.readline()
     return(np.array(ret))
             
