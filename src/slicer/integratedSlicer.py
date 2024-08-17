@@ -1,3 +1,4 @@
+#integrates functionality of slicer in use and preview to slice and generate preview at same time
 import cv2
 import numpy as np
 from PIL import Image

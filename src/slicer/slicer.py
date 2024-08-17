@@ -1,3 +1,5 @@
+#OLD VERSION
+#slices a png image into something usable for the machine
 import cv2
 import numpy as np
 from PIL import Image

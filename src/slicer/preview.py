@@ -1,3 +1,4 @@
+#draws a preview of given file to see before sending to run
 import matplotlib.pyplot as plt
 import numpy as np
 
