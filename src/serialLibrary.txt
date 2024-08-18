@@ -1,0 +1,19 @@
+All commands that can be sent and recognized by machine over serial
+NOTE: Due to annoying bug, any single line command over serial must have trailing space if manually typed
+
+end                         = ends program
+z                           = zeros out machine
+tp                          = toggle pen
+pu                          = pen up
+pd                          = pen down
+hu                          = pen half up
+x   [STEPS]     [SPEED]     = move x by certain steps and SPEED
+y   [STEPS]     [SPEED]     = move y by certain steps and SPEED
+xbs [SEGMENTS]  [SPEED]     = move x by certain segments and SPEED
+ybs [SEGMENTS]  [SPEED]     = move y by certain segments and SPEED
+rtp [X CORD]    [Y CORD]    = move to a certain point
+xs [SPEED]                  = change x speed to
+ys [SPEED]                  = change y speed to
+square [SIZE] [SPEED]       = make square of specified size and speed
+hello                       = makes machine write hello
+
