@@ -252,7 +252,7 @@ void runToPoint(double xPoint, double yPoint)
 {
     double s = slope(xPoint, yPoint);
     Serial.println(s);
-
+    //hello
     // vertical line
     if (s == -1)
     {
