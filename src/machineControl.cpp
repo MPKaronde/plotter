@@ -307,13 +307,20 @@ void runToPoint(double xPoint, double yPoint)
         Y2.run();
     }
 
+    //Stop as fast as possible to reduce delay
+    X.stop();
+    Y1.stop();
+    Y2.stop();
+
     // set that have reached location
     currentX = xPoint;
     currentY = yPoint;
+}
 
-    // reset motor speeds
-    setXspeed(maxSpeed);
-    setYspeed(maxSpeed);
+//  run to a point in a curved line of a constant radius
+void curveToPoint(double xPoint, double yPoint)
+{
+
 }
 
 // standard patterns to test with
