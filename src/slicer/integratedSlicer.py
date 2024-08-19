@@ -7,9 +7,9 @@ import slicer2
 import preview
 
 #USER PARAMETERS
-imagePath = 'C:\\Users\\manav\\Documents\\PlatformIO\\Projects\\Plotter\\src\\slicer\\vectors\\test6.png'
+imagePath = 'C:\\Users\\manav\\Documents\\PlatformIO\\Projects\\Plotter\\src\\slicer\\vectors\\test5.png'
 writePath = r"C:\\Users\\manav\\Documents\\PlatformIO\\Projects\\Plotter\\src\\gCodeIO\\file.txt"
-resolution = .8
+resolution = 0.3
 
 #get coordinates
 cords = slicer2.process_image(imagePath, resolution)

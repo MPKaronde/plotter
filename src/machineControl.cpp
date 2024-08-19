@@ -16,7 +16,7 @@ const int axisSpeed = 1200;
 const int maxSpeed = 1200; // 2.0 encoded
 const int midSpeed = 1000; // 1.0 encoded
 const int lowSpeed = 800;  // 0.0 encoded
-const int acceleration = 10000.0;
+const long acceleration = 1000000;
 
 const double minAcceptableSpeed = 400.0; // minimum safe speed
 
@@ -252,8 +252,8 @@ void runToPoint(double xPoint, double yPoint)
 {
     double s = slope(xPoint, yPoint);
     Serial.println(s);
-    //hello
-    // vertical line
+    // hello
+    //  vertical line
     if (s == -1)
     {
         moveYBySegments(yPoint - currentY, maxSpeed);
@@ -307,11 +307,6 @@ void runToPoint(double xPoint, double yPoint)
         Y2.run();
     }
 
-    //Stop as fast as possible to reduce delay
-    X.stop();
-    Y1.stop();
-    Y2.stop();
-
     // set that have reached location
     currentX = xPoint;
     currentY = yPoint;
@@ -320,7 +315,6 @@ void runToPoint(double xPoint, double yPoint)
 //  run to a point in a curved line of a constant radius
 void curveToPoint(double xPoint, double yPoint)
 {
-
 }
 
 // standard patterns to test with

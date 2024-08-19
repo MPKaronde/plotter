@@ -1,5 +1,3 @@
-#NEW / CURRENT VERSION
-#slices a png into something usable for the machine
 import cv2
 import numpy as np
 from PIL import Image
@@ -39,6 +37,7 @@ def process_image(image_path, resolution, grid_size=10, epsilon_factor=0.01):
     output = ""
     coordinates_list = []
     pen_down = False
+    start_point = (0, 0)  # The pen always starts at (0,0)
 
     for contour in contours:
         # Approximate the contour to remove points on straight lines
@@ -57,7 +56,25 @@ def process_image(image_path, resolution, grid_size=10, epsilon_factor=0.01):
         if contour_coords[0] != contour_coords[-1]:
             contour_coords.append(contour_coords[0])
 
-        # Determine if a penDown command is needed
+        # Check if this contour is directly connected to the previous contour
+        if coordinates_list:
+            last_end = coordinates_list[-1][-1]
+            first_start = contour_coords[0]
+            if np.linalg.norm(np.array(last_end) - np.array(first_start)) >= resolution:
+                # Pen should be lifted to move to a new disconnected contour
+                if pen_down:
+                    output += "hu\n"
+                    pen_down = False
+                # Move to the new start point
+                output += f"rtp {first_start[0]} {first_start[1]}\n"
+
+        # Handle the first move from the start point (0,0)
+        if not coordinates_list and contour_coords[0] != start_point:
+            output += "pu\n"  # Lift the pen before moving from (0,0)
+            output += f"rtp {contour_coords[0][0]} {contour_coords[0][1]}\n"
+            pen_down = False
+
+        # Pen should be down for drawing the contour
         if not pen_down:
             output += "pd\n"
             pen_down = True
@@ -80,11 +97,7 @@ def process_image(image_path, resolution, grid_size=10, epsilon_factor=0.01):
             output += f"rtp {coord[0]} {coord[1]}\n"
             last_point = coord
 
-        # End of the current contour
-        output += "pu\n"
-        pen_down = False
-
-        # Store the contour coordinates for connection checking
+        # End of the current contour, pen will be lifted next time if needed
         coordinates_list.append(contour_coords)
 
     # Ensure final pen up command if needed

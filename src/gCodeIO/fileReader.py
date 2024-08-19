@@ -12,7 +12,7 @@ serialRead = serial.Serial(port = '\\\\.\\COM8', baudrate = 9600, bytesize = 8, 
 #open file
 code = open(filePath, "r")
 
-waitTime = 0.01
+waitTime = 0.001
 
 #reads whats on serial port, prints it, returns it
 def readSerial():
