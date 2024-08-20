@@ -11,6 +11,10 @@ AccelStepper Y2(HALFSTEP, 6, 7, 8, 9);
 AccelStepper Y1(HALFSTEP, 2, 3, 4, 5);
 AccelStepper Z(HALFSTEP, 14, 16, 15, 17); // A0 - A3 --> D14 - D17
 
+// Limit switches
+const int Y_SWITCH = 18;
+const int X_SWITCH = 19;
+
 // axis motor parameters
 const int axisSpeed = 1200;
 const int maxSpeed = 1200; // 2.0 encoded
@@ -59,17 +63,9 @@ void setup()
 
     penIsUp = true;
     penIsHalfUp = false;
-}
 
-// sets all machine axis = 0
-//
-//
-void zeroMachine()
-{
-    currentX = 0;
-    currentY = 0;
-    Serial.println("CurrentX: " + String(currentX));
-    Serial.println("CurrentY: " + String(currentY));
+    pinMode(X_SWITCH, INPUT_PULLUP);
+    pinMode(Y_SWITCH, INPUT_PULLUP);
 }
 
 // pen height code
@@ -438,6 +434,41 @@ double setAcceptableSpeed(double speed)
     return speed;
 }
 
+// sets all machine axis = 0
+//
+//
+void zeroMachine()
+{
+    // zero y
+    currentY = 100;
+    while (currentY != 0)
+    {
+        moveYbySteps(-100, 1000);
+        if (digitalRead(Y_SWITCH) == LOW)
+        {
+            moveYbySteps(150, 1000);
+            currentY = 0;
+            Serial.println("Y Bumped");
+        }
+    }
+
+    // zero x
+    currentX = 100;
+    while (currentX != 0)
+    {
+        moveXbySteps(-100, 1000);
+        if (digitalRead(X_SWITCH) == LOW)
+        {
+            moveXbySteps(150, 1000);
+            currentX = 0;
+            Serial.println("X Bumped");
+        }
+    }
+
+    Serial.println("CurrentX: " + String(currentX));
+    Serial.println("CurrentY: " + String(currentY));
+}
+
 // code to process commands from computer read code
 bool processCommand(String command)
 {
@@ -610,24 +641,20 @@ void runProgam()
 // runner loop
 //
 //
+
 bool complete = false;
 void loop()
 {
-    /*
-    Serial.print("\n");
-    while (1 == 1)
-    {
-        Serial.print("hello\n");
-    }
-    */
     // put all runner code within if statement
     if (!complete)
     {
-        // Serial.print("hello");
+        // zeros out the machine
+        zeroMachine();
 
+        // wait for confirmation to go
         onStart();
 
-        // Start all runner code here
+        // do everything put in over serial
         runProgam();
 
         // end all runner code before here
