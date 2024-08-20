@@ -12,13 +12,13 @@
 
 #### machineControl.cpp
 ##### This is the file that is run on the arduino. Note that everything in this file to do with the y-axis assumes two y-motors that must act in opposite directions. Before loading it there are certain parameters that need to be attained and updated, most of which are self explanatory, but some of which may require guidance:
-  ##### The pin numbers for all your stepper motors. Note: for Arduino Uno and Nano (and potentially others), some analog ports will have to be used as digital ports for this purpose. This can be achieved by simply plugging the steppers into the analog ports and listing them as a continuation of the digital ports in the code.
-  ##### Axis speeds / acceleration: the rates at which you're x and y axis's will move
-  ##### Z-motor parameters: the rates at which you're z-motor will move
-    ###### zLiftDistance: the distance you're z motor must move to go from all the way up to pen down.
-  ##### Translation parameters: Currently best found by trial and error. Note: both assume you use the same motors and translate motion in the same way for both axis's. If this is not the case you will have to make a seperate one for each axis and implement it accordingly.
-    ###### stepsPerSegment: the number of motor steps the x / y axis motors must rotate to move a tenth of the machine's work area.
-    ###### segmentsPerCm: the number of segments in a Cm (or more likely, 1 over the numer of Cm in a segment)
+  * ##### The pin numbers for all your stepper motors. Note: for Arduino Uno and Nano (and potentially others), some analog ports will have to be used as digital ports for this purpose. This can be achieved by simply plugging the steppers into the analog ports and listing them as a continuation of the digital ports in the code.
+  * ##### Axis speeds / acceleration: the rates at which you're x and y axis's will move
+  * ##### Z-motor parameters: the rates at which you're z-motor will move
+    * ###### zLiftDistance: the distance you're z motor must move to go from all the way up to pen down.
+  * ##### Translation parameters: Currently best found by trial and error. Note: both assume you use the same motors and translate motion in the same way for both axis's. If this is not the case you will have to make a seperate one for each axis and implement it accordingly.
+    * ###### stepsPerSegment: the number of motor steps the x / y axis motors must rotate to move a tenth of the machine's work area.
+    * ###### segmentsPerCm: the number of segments in a Cm (or more likely, 1 over the numer of Cm in a segment)
 
 
 
